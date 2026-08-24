@@ -1,0 +1,24 @@
+{
+  "name": "serioussportsync-scraper",
+  "version": "0.2.8",
+  "description": "Companion scraper service for SeriousSportSync. Receives search titles, returns hash candidates from multiple indexer sources. Web GUI for configuration, live activity, and ops.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "check": "node scripts/check-syntax.js",
+    "test": "node scripts/check-syntax.js && node scripts/test-prowlarr-hydration.js"
+  },
+  "license": "MIT",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0",
+    "https-proxy-agent": "^7.0.2",
+    "form-data": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

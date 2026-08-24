@@ -1,0 +1,7 @@
+services:
+  serioussportsync-scraper:
+    image: serioussportsync-scraper:dev
+    pull_policy: never
+    build:
+      context: .
+

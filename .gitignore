@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Local configuration and persistent state
+.env
+.env.*
+!.env.example
+data/
+
+# Test and coverage output
+coverage/
+.nyc_output/
+
+# Build and editor artifacts
+*.tgz
+*.tar.gz
+*.zip
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
