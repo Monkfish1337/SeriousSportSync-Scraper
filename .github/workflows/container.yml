@@ -67,7 +67,16 @@ jobs:
             -e SCRAPER_AUTH_TOKEN=ci-only-scraper-token \
             -p 127.0.0.1:18080:8080 \
             "${IMAGE_NAME}@${IMAGE_DIGEST}"
-          curl --fail --show-error --retry 10 --retry-delay 2 \
+          status=starting
+          for attempt in $(seq 1 30); do
+            status="$(docker inspect serioussportsync-scraper-smoke \
+              --format '{{.State.Health.Status}}')"
+            echo "Scraper health: $status"
+            if [[ "$status" == "healthy" || "$status" == "unhealthy" ]]; then break; fi
+            sleep 2
+          done
+          [[ "$status" == "healthy" ]]
+          curl --fail --show-error --retry 5 --retry-delay 2 --retry-all-errors \
             http://127.0.0.1:18080/health
 
       - name: Show smoke-test logs on failure
