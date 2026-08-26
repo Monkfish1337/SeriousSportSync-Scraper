@@ -4,7 +4,9 @@ Companion indexer-aggregator for the SeriousSportSync metadata addon.
 
 The metadata addon stays content-neutral. This service does the dirty work — querying Prowlarr, Zilean (DMM), Knaben, raw Torznab feeds, anything you wire in — and returns a flat list of release-candidate metadata to the addon, which in turn resolves them against the user's debrid provider and returns only playable URLs.
 
-> Private companion. Not intended for public distribution. Run it on your own infrastructure, behind your own auth.
+> Public source and image, private runtime. Run it only on your own internal
+> container network. The operator GUI has no login wall and must not be routed
+> to the Internet.
 
 ---
 
@@ -42,19 +44,20 @@ cp .env.example .env
 docker compose up -d
 ```
 
-The repository and its GHCR image are private. Authenticate once before
-cloning/pulling with a GitHub token that can read the repository and packages:
-
-```bash
-gh auth login
-gh auth token | docker login ghcr.io -u <github-username> --password-stdin
-```
+The repository and GHCR image are public, so cloning and pulling do not require
+a GitHub token.
 
 Update to the newest image with `docker compose pull && docker compose up -d`.
 For a local source build instead, run
 `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`.
 
-Open `http://<host>:8080/` for the GUI.
+The Compose port is loopback-only. On the Docker host, open
+`http://127.0.0.1:8080/`. For remote administration, use an SSH tunnel rather
+than publishing the GUI:
+
+```bash
+ssh -L 8080:127.0.0.1:8080 your-docker-host
+```
 
 The metadata addon's `/admin → Sources` page is where you point at this service (companion URL + auth token).
 
@@ -64,7 +67,7 @@ The metadata addon's `/admin → Sources` page is where you point at this servic
 | --- | --- | --- |
 | `HOST` | `0.0.0.0` | bind address |
 | `PORT` | `8080` | listen port |
-| `SCRAPER_AUTH_TOKEN` | _(unset = open)_ | bearer token required on `/scrape` |
+| `SCRAPER_AUTH_TOKEN` | required by Compose | bearer token required on `/scrape` |
 | `SOURCE_TIMEOUT_MS` | `10000` | default per-source request timeout |
 | `SCRAPE_BUDGET_MS` | `25000` | hard ceiling on overall `/scrape` time |
 | `LOG_BUFFER_MAX` | `4000` | in-memory log ring buffer size |
@@ -166,6 +169,7 @@ The metadata addon takes it from there: TorBox batched cache-check on the infoHa
 
 ## Status
 
-Designed for a single operator running it next to their metadata addon. No
-multi-tenant auth, no rate limiting, and no user accounts. Set
-`SCRAPER_AUTH_TOKEN` and front it with a reverse proxy if you expose it.
+Designed for a single operator running it next to their metadata addon. It has
+no GUI authentication, multi-tenant auth, or user accounts. Keep the GUI
+internal and set `SCRAPER_AUTH_TOKEN` for SSS API calls; do not expose it with a
+plain public reverse-proxy route.

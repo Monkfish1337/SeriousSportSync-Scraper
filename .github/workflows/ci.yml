@@ -19,5 +19,20 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --prod --audit-level=moderate
       - run: pnpm test
       - run: docker build --tag serioussportsync-scraper:test .
+
+      - name: Validate loopback-only Compose publication
+        env:
+          SCRAPER_AUTH_TOKEN: ci-only-scraper-token
+        run: |
+          docker compose config --format json > /tmp/scraper-compose.json
+          node -e "
+            const cfg = require('/tmp/scraper-compose.json');
+            const ports = cfg.services['serioussportsync-scraper'].ports || [];
+            if (!ports.length || ports.some((port) => port.host_ip !== '127.0.0.1')) {
+              throw new Error('scraper must publish only on 127.0.0.1');
+            }
+            console.log('OK — scraper host port is loopback-only.');
+          "

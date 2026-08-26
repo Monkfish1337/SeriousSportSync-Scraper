@@ -23,6 +23,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --prod --audit-level=moderate
       - run: pnpm test
       - run: docker build --tag serioussportsync-scraper:verify .
 
@@ -86,3 +87,10 @@ jobs:
       - name: Remove smoke-test container
         if: always()
         run: docker rm --force serioussportsync-scraper-smoke 2>/dev/null || true
+
+      - name: Verify anonymous GHCR pull
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          docker logout ghcr.io
+          docker pull "${IMAGE_NAME}@${IMAGE_DIGEST}"

@@ -10,14 +10,15 @@ services:
     pull_policy: always
     restart: unless-stopped
     ports:
-      - "${PORT:-8080}:8080"
+      # The GUI has no login wall and can export configured source keys.
+      - "127.0.0.1:${PORT:-8080}:8080"
     env_file:
       - path: .env
         required: false
     environment:
       HOST: 0.0.0.0
       PORT: 8080
-      SCRAPER_AUTH_TOKEN: ${SCRAPER_AUTH_TOKEN}
+      SCRAPER_AUTH_TOKEN: "${SCRAPER_AUTH_TOKEN:?Set SCRAPER_AUTH_TOKEN in .env}"
       SOURCE_TIMEOUT_MS: ${SOURCE_TIMEOUT_MS:-10000}
       SCRAPE_BUDGET_MS: ${SCRAPE_BUDGET_MS:-25000}
       LOG_BUFFER_MAX: ${LOG_BUFFER_MAX:-4000}
@@ -26,3 +27,5 @@ services:
       NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,prowlarr,zilean}
     volumes:
       - ./data:/app/data
+    security_opt:
+      - no-new-privileges:true
