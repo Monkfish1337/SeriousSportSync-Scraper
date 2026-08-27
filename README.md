@@ -131,7 +131,8 @@ Authorization: Bearer <token>
 {
   "promotion": "ufc",
   "event": { "name": "UFC 291", "date": "2026-07-29" },
-  "searchTitles": ["UFC 291", "UFC.291.PPV"]
+  "searchTitles": ["UFC 291", "UFC.291.PPV"],
+  "budgetMs": 5000
 }
 ```
 
@@ -154,6 +155,8 @@ Response:
 }
 ```
 
+`budgetMs` is optional and can only shorten the operator's `SCRAPE_BUDGET_MS`
+ceiling. Completed sources are retained when another source reaches that deadline.
 The metadata addon takes it from there: TorBox batched cache-check on the infoHashes, resolve cached candidates to playable URLs, return Stremio `url` rows only.
 
 ---
@@ -162,7 +165,8 @@ The metadata addon takes it from there: TorBox batched cache-check on the infoHa
 
 - State is a flat JSON file (`data/sources.json` + `data/history.json`). Atomic-rename writes, file mode `0o600`. Volume-mount `/app/data` to survive container rebuilds.
 - Logs mirror to `stdout`, so `docker logs serioussportsync-scraper` works fine, but the in-GUI log viewer is faster (SSE, filterable, no shell needed).
-- Per-source timeouts are independent; one dead indexer doesn't stall the rest. The overall `SCRAPE_BUDGET_MS` is the hard ceiling.
+- Per-source timeouts are independent; one dead indexer doesn't stall the rest. The overall `SCRAPE_BUDGET_MS` is the hard ceiling, and callers may request a shorter per-call budget.
+- Prowlarr searches aliases concurrently (three at a time by default) so events with many aliases do not incur serial query latency.
 - All outbound HTTP honors `HTTPS_PROXY` + `NO_PROXY` if set — point at gluetun if you want the scraper to share its VPN egress.
 
 ---
