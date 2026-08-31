@@ -71,6 +71,8 @@ function render(req, res) {
 
   let body = '';
   body += '<h1>Sources</h1>';
+  body += '<div class="card"><strong>Private trackers such as RuTracker</strong>'
+    + '<p class="hint" style="margin-bottom:0;">Configure the tracker login in Prowlarr or Jackett, then add that service here as a Prowlarr or Torznab source. A tracker website URL is not a Torznab API and will return HTTP 404.</p></div>';
   if (flash) {
     body += '<div class="card" style="border-color:var(--accent);"><strong>'
       + escapeHtml(flash) + '</strong></div>';

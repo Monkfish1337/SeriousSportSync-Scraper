@@ -116,6 +116,11 @@ Built-in types in v0.1:
 - **zilean** — DebridMediaManager hashlist mirror (`POST /dmm/search`).
 - **knaben** — Knaben multi-tracker aggregator (`POST /v1`).
 - **torznab** — generic Torznab XML feed; bring your own indexer URL + API key.
+- **bitmagnet** — dedicated Bitmagnet Torznab integration; enter the service URL and the companion uses `/torznab` without requiring an API key.
+
+Private tracker website logins are not performed by the companion. Configure
+credentials for trackers such as RuTracker in Prowlarr or Jackett, then add the
+Prowlarr API or Jackett Torznab endpoint as the companion source.
 
 ---
 

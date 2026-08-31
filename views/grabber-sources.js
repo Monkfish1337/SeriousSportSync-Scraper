@@ -69,6 +69,8 @@ function render(req, res) {
   let body = '';
   body += '<h1>Grabber Sources</h1>';
   body += '<p class="hint">Indexers used by the Grabber\'s general-purpose search + grab pipeline. Independent from Sport Sources — changes here do NOT affect /scrape calls from SeriousSportSync.</p>';
+  body += '<div class="card"><strong>Private trackers such as RuTracker</strong>'
+    + '<p class="hint" style="margin-bottom:0;">Configure the tracker username/password in Prowlarr or Jackett, then add that service here. Do not enter the tracker website URL directly; it is not a Torznab endpoint.</p></div>';
   if (flash) {
     body += '<div class="card" style="border-color:var(--accent);"><strong>'
       + escapeHtml(flash) + '</strong></div>';
