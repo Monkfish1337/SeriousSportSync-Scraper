@@ -21,6 +21,12 @@ const config = {
   // contribute nothing.
   scrapeBudgetMs: num(process.env.SCRAPE_BUDGET_MS, 25000),
 
+  // Successful source results are briefly retained by exact query set. This
+  // lets a slow aggregator finish after the caller's response deadline and
+  // makes those results available on the next Refresh Links request.
+  sourceCacheTtlMs: num(process.env.SOURCE_CACHE_TTL_MS, 15 * 60 * 1000),
+  sourceCacheMax: num(process.env.SOURCE_CACHE_MAX, 500),
+
   // In-memory log ring buffer size.
   logBufferMax: num(process.env.LOG_BUFFER_MAX, 4000),
 

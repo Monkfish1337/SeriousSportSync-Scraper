@@ -5,6 +5,7 @@ const settings = require('../lib/settings');
 const registry = require('../lib/sources/registry');
 
 const hash = 'a'.repeat(40);
+const slowHash = 'b'.repeat(40);
 settings.enabledSources = () => [
   { id: 'fast', name: 'Fast', type: 'test-fast', config: { timeoutMs: 5000 } },
   { id: 'slow', name: 'Slow', type: 'test-slow', config: { timeoutMs: 5000 } },
@@ -12,7 +13,9 @@ settings.enabledSources = () => [
 const originalGet = registry.get;
 registry.get = (type) => {
   if (type === 'test-fast') return { multiSearch: async () => [{ infoHash: hash, title: 'Dutch GP' }] };
-  if (type === 'test-slow') return { multiSearch: async () => new Promise(() => {}) };
+  if (type === 'test-slow') return { multiSearch: async () => new Promise((resolve) => {
+    setTimeout(() => resolve([{ infoHash: slowHash, title: 'Dutch GP slow result' }]), 1200);
+  }) };
   return originalGet(type);
 };
 
@@ -27,7 +30,17 @@ registry.get = (type) => {
   assert(elapsed >= 900 && elapsed < 1800, 'request budget was not respected: ' + elapsed + 'ms');
   assert.strictEqual(result.candidates.length, 1);
   assert.strictEqual(result.candidates[0].infoHash, hash);
-  console.log('Scrape request budget and partial-source tests passed.');
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const refreshedStart = Date.now();
+  const refreshed = await require('../lib/search').scrape({
+    event: { id: 'f1-dutch', name: 'Dutch Grand Prix' },
+    searchTitles: ['Dutch GP'],
+    budgetMs: 1000,
+  });
+  assert(Date.now() - refreshedStart < 250, 'cached refresh should return immediately');
+  assert(refreshed.candidates.some((candidate) => candidate.infoHash === slowHash),
+    'background result was not retained for refresh');
+  console.log('Scrape response budget, partial-source and background-cache tests passed.');
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;

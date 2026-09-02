@@ -70,6 +70,8 @@ The metadata addon's `/admin → Sources` page is where you point at this servic
 | `SCRAPER_AUTH_TOKEN` | required by Compose | bearer token required on `/scrape` |
 | `SOURCE_TIMEOUT_MS` | `10000` | default per-source request timeout |
 | `SCRAPE_BUDGET_MS` | `25000` | hard ceiling on overall `/scrape` time |
+| `SOURCE_CACHE_TTL_MS` | `900000` | retain completed source searches for Refresh Links (15 minutes) |
+| `SOURCE_CACHE_MAX` | `500` | maximum exact source/query results retained in memory |
 | `LOG_BUFFER_MAX` | `4000` | in-memory log ring buffer size |
 | `HISTORY_MAX` | `200` | on-disk `/scrape` call retention |
 | `HTTPS_PROXY` | _(unset)_ | outbound proxy (e.g. `http://gluetun:8888`) |
@@ -162,6 +164,10 @@ Response:
 
 `budgetMs` is optional and can only shorten the operator's `SCRAPE_BUDGET_MS`
 ceiling. Completed sources are retained when another source reaches that deadline.
+If a slow source such as Prowlarr exceeds the caller's response window, it may
+finish within its own configured timeout in the background. Its result is retained
+and returned immediately when the client uses **Refresh Links**, avoiding a repeat
+search and preventing slow indexers from being silently discarded.
 The metadata addon takes it from there: TorBox batched cache-check on the infoHashes, resolve cached candidates to playable URLs, return Stremio `url` rows only.
 
 ---
