@@ -1,13 +1,13 @@
 {
   "name": "serioussportsync-scraper",
-  "version": "0.2.13",
+  "version": "0.3.0",
   "description": "Companion scraper service for SeriousSportSync. Receives search titles, returns hash candidates from multiple indexer sources. Web GUI for configuration, live activity, and ops.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
     "check": "node scripts/check-syntax.js",
-    "test": "node scripts/check-syntax.js && node scripts/test-prowlarr-hydration.js && node scripts/test-search-budget.js && node scripts/test-public-boundary.js && node scripts/test-torznab-endpoints.js"
+    "test": "node scripts/check-syntax.js && node scripts/test-prowlarr-hydration.js && node scripts/test-search-budget.js && node scripts/test-release-intelligence.js && node scripts/test-public-boundary.js && node scripts/test-torznab-endpoints.js"
   },
   "license": "MIT",
   "private": true,

@@ -33,6 +33,9 @@ app.get('/logs/stream', (req, res) => require('./views/logs').sse(req, res));
 app.get('/history',     (req, res) => require('./views/history').render(req, res));
 app.get('/search',      (req, res) => require('./views/search').render(req, res));
 app.post('/search',     (req, res) => require('./views/search').run(req, res));
+app.get('/intelligence', (req, res) => require('./views/intelligence').render(req, res));
+app.post('/intelligence/collect', (req, res) => require('./views/intelligence').collect(req, res));
+app.get('/intelligence/export', (req, res) => require('./views/intelligence').exportData(req, res));
 app.get('/settings',    (req, res) => require('./views/settings').render(req, res));
 app.post('/settings/clear-history', (req, res) => require('./views/settings').clearHistory(req, res));
 app.post('/settings/clear-logs',    (req, res) => require('./views/settings').clearLogs(req, res));
@@ -109,6 +112,19 @@ app.post('/api/general-search', auth.requireBearer, async (req, res) => {
   }
 });
 
+// Safe title-only research API used by the SSS Promotion Wizard. Results
+// never contain source credentials, download URLs, hashes or trackers.
+app.post('/api/intelligence/search', auth.requireBearer, (req, res) => {
+  const intelligence = require('./lib/release-intelligence');
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(intelligence.search(req.body || {}));
+});
+app.get('/api/intelligence/export', auth.requireBearer, (req, res) => {
+  const intelligence = require('./lib/release-intelligence');
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(intelligence.exportSafe(req.query || {}));
+});
+
 // 0.1.4 — Send a grabbed result to qBit or SAB.
 // Body: { downloader: 'qbit'|'sab', type: 'torrent'|'usenet', url, title?, category? }
 app.post('/api/grab', auth.requireBearer, async (req, res) => {
@@ -175,4 +191,5 @@ app.listen(port, host, () => {
   log.info('system', 'GUI: http://' + host + ':' + port + '/');
   log.info('system', 'API: POST http://' + host + ':' + port + '/scrape');
   log.info('system', '/scrape requires Authorization: Bearer <token>');
+  require('./lib/release-intelligence').startScheduler();
 });

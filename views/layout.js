@@ -47,6 +47,7 @@ function layout(req, { title, body, active }) {
     +       '<span class="nav-sep">Sport</span>'
     +       navItem('/sources', 'Sport Sources', active === 'sources')
     +       navItem('/search',  'Sport Search',  active === 'search')
+    +       navItem('/intelligence', 'Release Intelligence', active === 'intelligence')
 
     // Grabber — independent general-purpose search + grab pipeline.
     +       '<span class="nav-sep">Grabber</span>'

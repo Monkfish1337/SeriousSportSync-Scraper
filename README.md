@@ -73,6 +73,11 @@ The metadata addon's `/admin → Sources` page is where you point at this servic
 | `RESEARCH_BUDGET_MS` | `60000` | ceiling for explicit Promotion Wizard research requests |
 | `SOURCE_CACHE_TTL_MS` | `900000` | retain completed source searches for Refresh Links (15 minutes) |
 | `SOURCE_CACHE_MAX` | `500` | maximum exact source/query results retained in memory |
+| `INTELLIGENCE_ENABLED` | `true` | collect recent title-only metadata from supported Sport Sources |
+| `INTELLIGENCE_INTERVAL_MS` | `3600000` | collection interval (one hour) |
+| `INTELLIGENCE_STARTUP_DELAY_MS` | `60000` | delay before the first collection after startup |
+| `INTELLIGENCE_RETENTION_DAYS` | `14` | rolling naming-evidence retention window |
+| `INTELLIGENCE_MAX_ITEMS` | `20000` | hard cap on retained deduplicated titles |
 | `LOG_BUFFER_MAX` | `4000` | in-memory log ring buffer size |
 | `HISTORY_MAX` | `200` | on-disk `/scrape` call retention |
 | `HTTPS_PROXY` | _(unset)_ | outbound proxy (e.g. `http://gluetun:8888`) |
@@ -173,6 +178,18 @@ search and preventing slow indexers from being silently discarded.
 Promotion Wizard research sends `researchMode: true`. That explicit admin action
 uses the separate `RESEARCH_BUDGET_MS` ceiling, allowing slow federated indexers
 to finish without increasing playback latency.
+
+### Release Intelligence
+
+The **Release Intelligence** page builds a small local naming database from the
+recent-feed capability of configured Sport Sources. Prowlarr and direct Torznab
+sources are supported initially; unsupported sources are skipped without being
+probed. Collection runs hourly by default and can also be started manually.
+
+The database stores only release title, publication/observation dates, size,
+category, protocol, and source/indexer labels. It never stores credentials,
+download URLs, magnets, info hashes, trackers, or NZB data. Search it in the GUI
+or download the bounded safe JSON dataset for promotion research.
 The metadata addon takes it from there: TorBox batched cache-check on the infoHashes, resolve cached candidates to playable URLs, return Stremio `url` rows only.
 
 ---

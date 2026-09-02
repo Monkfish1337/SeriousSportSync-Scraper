@@ -32,6 +32,14 @@ const config = {
   sourceCacheTtlMs: num(process.env.SOURCE_CACHE_TTL_MS, 15 * 60 * 1000),
   sourceCacheMax: num(process.env.SOURCE_CACHE_MAX, 500),
 
+  // Local, title-only release intelligence. This is naming evidence for the
+  // Promotion Wizard, not a playback cache and never stores retrieval URLs.
+  intelligenceEnabled: (process.env.INTELLIGENCE_ENABLED || 'true') !== 'false',
+  intelligenceIntervalMs: num(process.env.INTELLIGENCE_INTERVAL_MS, 60 * 60 * 1000),
+  intelligenceStartupDelayMs: num(process.env.INTELLIGENCE_STARTUP_DELAY_MS, 60 * 1000),
+  intelligenceRetentionDays: num(process.env.INTELLIGENCE_RETENTION_DAYS, 14),
+  intelligenceMaxItems: num(process.env.INTELLIGENCE_MAX_ITEMS, 20000),
+
   // In-memory log ring buffer size.
   logBufferMax: num(process.env.LOG_BUFFER_MAX, 4000),
 
