@@ -3,6 +3,7 @@
 const assert = require('assert');
 const settings = require('../lib/settings');
 const registry = require('../lib/sources/registry');
+const config = require('../config');
 
 const hash = 'a'.repeat(40);
 const slowHash = 'b'.repeat(40);
@@ -40,6 +41,20 @@ registry.get = (type) => {
   assert(Date.now() - refreshedStart < 250, 'cached refresh should return immediately');
   assert(refreshed.candidates.some((candidate) => candidate.infoHash === slowHash),
     'background result was not retained for refresh');
+  const originalScrapeBudget = config.scrapeBudgetMs;
+  const originalResearchBudget = config.researchBudgetMs;
+  config.scrapeBudgetMs = 1000;
+  config.researchBudgetMs = 2500;
+  const researched = await require('../lib/search').scrape({
+    event: { id: 'f1-dutch-research', name: 'Dutch Grand Prix research' },
+    searchTitles: ['Dutch GP research'],
+    budgetMs: 1800,
+    researchMode: true,
+  });
+  config.scrapeBudgetMs = originalScrapeBudget;
+  config.researchBudgetMs = originalResearchBudget;
+  assert(researched.candidates.some((candidate) => candidate.infoHash === slowHash),
+    'research mode did not use its longer operator ceiling');
   console.log('Scrape response budget, partial-source and background-cache tests passed.');
 })().catch((error) => {
   console.error(error);

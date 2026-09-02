@@ -21,6 +21,11 @@ const config = {
   // contribute nothing.
   scrapeBudgetMs: num(process.env.SCRAPE_BUDGET_MS, 25000),
 
+  // Explicit admin research is allowed to wait longer than playback. This is
+  // still capped operator-side so an inbound request cannot choose an
+  // unbounded duration.
+  researchBudgetMs: num(process.env.RESEARCH_BUDGET_MS, 60000),
+
   // Successful source results are briefly retained by exact query set. This
   // lets a slow aggregator finish after the caller's response deadline and
   // makes those results available on the next Refresh Links request.

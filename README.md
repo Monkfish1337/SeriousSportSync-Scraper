@@ -70,6 +70,7 @@ The metadata addon's `/admin → Sources` page is where you point at this servic
 | `SCRAPER_AUTH_TOKEN` | required by Compose | bearer token required on `/scrape` |
 | `SOURCE_TIMEOUT_MS` | `10000` | default per-source request timeout |
 | `SCRAPE_BUDGET_MS` | `25000` | hard ceiling on overall `/scrape` time |
+| `RESEARCH_BUDGET_MS` | `60000` | ceiling for explicit Promotion Wizard research requests |
 | `SOURCE_CACHE_TTL_MS` | `900000` | retain completed source searches for Refresh Links (15 minutes) |
 | `SOURCE_CACHE_MAX` | `500` | maximum exact source/query results retained in memory |
 | `LOG_BUFFER_MAX` | `4000` | in-memory log ring buffer size |
@@ -168,6 +169,10 @@ If a slow source such as Prowlarr exceeds the caller's response window, it may
 finish within its own configured timeout in the background. Its result is retained
 and returned immediately when the client uses **Refresh Links**, avoiding a repeat
 search and preventing slow indexers from being silently discarded.
+
+Promotion Wizard research sends `researchMode: true`. That explicit admin action
+uses the separate `RESEARCH_BUDGET_MS` ceiling, allowing slow federated indexers
+to finish without increasing playback latency.
 The metadata addon takes it from there: TorBox batched cache-check on the infoHashes, resolve cached candidates to playable URLs, return Stremio `url` rows only.
 
 ---

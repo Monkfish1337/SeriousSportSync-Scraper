@@ -1,6 +1,6 @@
 {
   "name": "serioussportsync-scraper",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "Companion scraper service for SeriousSportSync. Receives search titles, returns hash candidates from multiple indexer sources. Web GUI for configuration, live activity, and ops.",
   "main": "server.js",
   "scripts": {
