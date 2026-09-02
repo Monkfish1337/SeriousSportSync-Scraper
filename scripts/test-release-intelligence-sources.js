@@ -12,12 +12,31 @@ const xml = '<?xml version="1.0"?><rss xmlns:torznab="http://torznab.com/schemas
   + '</channel></rss>';
 const server = http.createServer((req, res) => {
   requests.push(req.url);
-  if (req.url.startsWith('/api/v1/search?')) {
+  if (req.url === '/api/v1/indexer') {
     res.setHeader('Content-Type', 'application/json');
     return res.end(JSON.stringify([
-      { title: 'UFC.300.1080p', categories: [{ id: 5060, name: 'TV/Sport' }], protocol: 'usenet' },
-      { title: 'Unrelated.Show.S02E09', categories: [{ id: 5070, name: 'TV/Anime' }], protocol: 'usenet' },
+      { id: 1, name: 'Torrent Feed', enable: true, protocol: 'torrent', supportsRss: true,
+        supportsSearch: true, capabilities: { categories: [{ id: 5000, subCategories: [{ id: 5060 }] }] } },
+      { id: 2, name: 'Usenet Search', enable: true, protocol: 'usenet', supportsRss: true,
+        supportsSearch: true, capabilities: { categories: [{ id: 5060 }] } },
+      { id: 3, name: 'Disabled', enable: false, protocol: 'torrent' },
+      { id: 4, name: 'No Sports', enable: true, protocol: 'usenet', supportsRss: true,
+        supportsSearch: true, capabilities: { categories: [{ id: 5070 }] } },
     ]));
+  }
+  if (req.url.startsWith('/api/v1/search?')) {
+    const url = new URL(req.url, 'http://test');
+    const id = url.searchParams.get('indexerIds');
+    const query = url.searchParams.get('query') || '';
+    res.setHeader('Content-Type', 'application/json');
+    if (id === '1') return res.end(JSON.stringify([
+      { title: 'UFC.300.1080p', categories: [{ id: 5060, name: 'TV/Sport' }], protocol: 'torrent' },
+      { title: 'Unrelated.Show.S02E09', categories: [{ id: 5070, name: 'TV/Anime' }], protocol: 'torrent' },
+    ]));
+    if (id === '2' && query === 'UFC') return res.end(JSON.stringify([
+      { title: 'UFC.301.1080p', categories: [{ id: 5060, name: 'TV/Sport' }], protocol: 'usenet' },
+    ]));
+    return res.end('[]');
   }
   if (req.url.startsWith('/torznab?')) {
     res.setHeader('Content-Type', 'application/xml');
@@ -28,16 +47,29 @@ const server = http.createServer((req, res) => {
 });
 const log = { info() {}, warn() {}, error() {}, debug() {} };
 
+assert.deepStrictEqual(prowlarr.categoryIds([{ id: 5000, subCategories: [{ id: 5060 }] }]),
+  ['5000', '5060']);
+assert.deepStrictEqual(prowlarr.fallbackQueries({ intelligenceFallbackQueriesPerRun: 0 }, 1, 0), []);
+
 server.listen(0, '127.0.0.1', async () => {
   const base = 'http://127.0.0.1:' + server.address().port;
   try {
-    const prowlarrRows = await prowlarr.recent({ url: base, apiKey: 'test' }, log);
-    assert.deepStrictEqual(prowlarrRows.map((row) => row.title), ['UFC.300.1080p']);
+    const prowlarrRows = await prowlarr.recent({ url: base, apiKey: 'test',
+      intelligenceFallbackQueries: 'UFC', intelligenceFallbackQueriesPerRun: 1 }, log);
+    assert.deepStrictEqual(prowlarrRows.map((row) => row.title).sort(),
+      ['UFC.300.1080p', 'UFC.301.1080p']);
+    assert.strictEqual(prowlarrRows.find((row) => row.title.includes('301')).protocol, 'usenet');
+    assert.strictEqual(prowlarrRows.diagnostics.length, 4);
+    assert.strictEqual(prowlarrRows.diagnostics.find((row) => row.name === 'Disabled').state, 'disabled');
+    assert.strictEqual(prowlarrRows.diagnostics.find((row) => row.name === 'No Sports').state, 'unsupported');
+    assert.strictEqual(prowlarrRows.diagnostics.find((row) => row.name === 'Usenet Search').mode, 'rotating search');
     const torznabRows = await torznab.recent({ url: base, apiPath: '/torznab' }, log);
     assert.deepStrictEqual(torznabRows.map((row) => row.title), ['UFC.300.1080p']);
     assert.ok(requests.some((url) => /categories=5060/.test(url)), requests.join('\n'));
     assert.ok(requests.some((url) => /cat=5060/.test(url)), requests.join('\n'));
-    assert.ok(requests.every((url) => !/[?&](?:query|q)=[^&]/.test(url)), requests.join('\n'));
+    assert.ok(requests.some((url) => /indexerIds=1/.test(url)), requests.join('\n'));
+    assert.ok(requests.some((url) => /indexerIds=2/.test(url) && /query=UFC/.test(url)), requests.join('\n'));
+    assert.ok(!requests.some((url) => /indexerIds=(?:3|4)/.test(url)), requests.join('\n'));
     console.log('Release Intelligence source filtering tests passed.');
   } finally {
     server.close();

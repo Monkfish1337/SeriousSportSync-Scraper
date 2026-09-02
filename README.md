@@ -184,7 +184,12 @@ to finish without increasing playback latency.
 The **Release Intelligence** page builds a small local naming database from the
 recent-feed capability of configured Sport Sources. It makes one sport-category
 feed request per source, not one remote search per event; SSS searches the saved
-titles locally when researching an event. Prowlarr and direct Torznab
+titles locally when researching an event. A Prowlarr source inventories and
+collects each configured indexer independently, showing its protocol, capability,
+raw/accepted/rejected counts, response time, and failure reason. Indexers with an
+empty recent feed receive a bounded rotating selection of broad sports queries so
+coverage grows over time without searching the complete event catalogue.
+Prowlarr and direct Torznab
 sources are supported initially; unsupported sources are skipped without being
 probed. Collection runs hourly by default and can also be started manually.
 

@@ -19,6 +19,20 @@ function render(req, res) {
       + '<td>' + layout.escapeHtml(item.size ? (item.size / 1073741824).toFixed(2) + ' GB' : '—') + '</td></tr>';
   }).join('');
   const s = status.stats;
+  const indexerDetails = status.lastRun ? status.lastRun.outcomes.flatMap((outcome) => outcome.details || []) : [];
+  const detailRows = indexerDetails.map((detail) => {
+    const tone = detail.state === 'working' ? 'good' : detail.state === 'error' ? 'bad'
+      : detail.state === 'empty' || detail.state === 'unsupported' ? 'warn' : 'muted';
+    const activity = layout.escapeHtml(detail.mode) + (detail.queries && detail.queries.length
+      ? '<div class="hint">' + layout.escapeHtml(detail.queries.join(' · ')) + '</div>' : '');
+    const outcome = detail.reason || (detail.accepted + ' sport title(s) retained');
+    return '<tr><td><strong>' + layout.escapeHtml(detail.name) + '</strong></td>'
+      + '<td>' + layout.escapeHtml(detail.protocol || 'unknown') + '</td>'
+      + '<td><span class="pill ' + tone + '">' + layout.escapeHtml(detail.state) + '</span></td>'
+      + '<td>' + activity + '</td><td>' + detail.raw + '</td><td>' + detail.accepted + '</td>'
+      + '<td>' + detail.rejected + '</td><td>' + detail.durationMs + ' ms</td>'
+      + '<td>' + layout.escapeHtml(outcome) + '</td></tr>';
+  }).join('');
   const body = '<div class="page-head"><div><h1>Release Intelligence</h1>'
     + '<p>Recent sport-category release names collected once per source—not per-event searches. SSS searches this local evidence when researching an event. No hashes, download links, trackers or credentials are stored.</p></div>'
     + '<form method="post" action="/intelligence/collect"><button class="btn primary" type="submit"'
@@ -27,6 +41,11 @@ function render(req, res) {
     + '<div><strong>' + s.sources + '</strong><span>sources</span></div><div><strong>'
     + s.retentionDays + ' days</strong><span>retention</span></div><div><strong>'
     + layout.escapeHtml(s.updatedAt || 'Not collected') + '</strong><span>last database update</span></div></div>'
+    + '<section class="panel"><div class="panel-head"><h2>Prowlarr indexer coverage</h2></div>'
+    + '<p class="hint">Each indexer is checked independently. Empty feeds receive only the configured rotating fallback searches.</p>'
+    + '<div class="table-wrap"><table class="t responsive"><thead><tr><th>Indexer</th><th>Type</th><th>State</th><th>Method</th><th>Raw</th><th>Accepted</th><th>Rejected</th><th>Time</th><th>Detail</th></tr></thead><tbody>'
+    + (detailRows || '<tr><td colspan="9" class="empty">Collect once to inspect individual indexer coverage.</td></tr>')
+    + '</tbody></table></div></section>'
     + '<section class="panel"><form method="get" action="/intelligence" class="filters">'
     + '<label>Find naming patterns<input name="q" value="' + layout.escapeHtml(query) + '" placeholder="UFC 300; Champions League Arsenal"></label>'
     + '<label>Protocol<select name="protocol"><option value="">All</option><option value="torrent"'
