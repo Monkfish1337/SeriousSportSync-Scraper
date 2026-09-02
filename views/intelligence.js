@@ -20,7 +20,7 @@ function render(req, res) {
   }).join('');
   const s = status.stats;
   const body = '<div class="page-head"><div><h1>Release Intelligence</h1>'
-    + '<p>Recent title-only naming evidence. No hashes, download links, trackers or credentials are stored.</p></div>'
+    + '<p>Recent sport-category release names collected once per source—not per-event searches. SSS searches this local evidence when researching an event. No hashes, download links, trackers or credentials are stored.</p></div>'
     + '<form method="post" action="/intelligence/collect"><button class="btn primary" type="submit"'
     + (status.running ? ' disabled' : '') + '>' + (status.running ? 'Collecting…' : 'Collect now') + '</button></form></div>'
     + '<div class="stats"><div><strong>' + s.total + '</strong><span>retained titles</span></div>'
