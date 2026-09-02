@@ -186,12 +186,17 @@ recent-feed capability of configured Sport Sources. It makes one sport-category
 feed request per source, not one remote search per event; SSS searches the saved
 titles locally when researching an event. A Prowlarr source inventories and
 collects each configured indexer independently, showing its protocol, capability,
-raw/accepted/rejected counts, response time, and failure reason. Indexers with an
-empty recent feed receive a bounded rotating selection of broad sports queries so
-coverage grows over time without searching the complete event catalogue.
-Prowlarr and direct Torznab
-sources are supported initially; unsupported sources are skipped without being
-probed. Collection runs hourly by default and can also be started manually.
+feed/search/accepted/rejected counts, response time, and failure reason. Indexers
+with an empty recent feed receive a bounded rotating selection of broad sports
+queries so coverage grows over time without searching the complete event catalogue.
+Indexers without a mapped TV/Sport category can also contribute through those
+searches, but only when every meaningful word—or a tightly defined sports abbreviation
+such as F1, UCL, or ONE FF—in the request appears in the result; those rows are visibly
+marked `title-verified-sport`. A separate
+collection timeout defaults to 30 seconds, so slow collection does not require
+increasing playback latency. Prowlarr and direct Torznab sources are supported
+initially; unsupported sources are skipped without being probed. Collection runs
+hourly by default and can also be started manually.
 
 The database stores only release title, publication/observation dates, size,
 category, protocol, and source/indexer labels. It never stores credentials,

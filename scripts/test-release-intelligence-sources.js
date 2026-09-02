@@ -20,7 +20,7 @@ const server = http.createServer((req, res) => {
       { id: 2, name: 'Usenet Search', enable: true, protocol: 'usenet', supportsRss: true,
         supportsSearch: true, capabilities: { categories: [{ id: 5060 }] } },
       { id: 3, name: 'Disabled', enable: false, protocol: 'torrent' },
-      { id: 4, name: 'No Sports', enable: true, protocol: 'usenet', supportsRss: true,
+      { id: 4, name: 'No Sports Mapping', enable: true, protocol: 'usenet', supportsRss: true,
         supportsSearch: true, capabilities: { categories: [{ id: 5070 }] } },
     ]));
   }
@@ -35,6 +35,10 @@ const server = http.createServer((req, res) => {
     ]));
     if (id === '2' && query === 'UFC') return res.end(JSON.stringify([
       { title: 'UFC.301.1080p', categories: [{ id: 5060, name: 'TV/Sport' }], protocol: 'usenet' },
+    ]));
+    if (id === '4' && query === 'UFC') return res.end(JSON.stringify([
+      { title: 'UFC.302.Prelims.1080p', categories: [{ id: 5000, name: 'TV' }], protocol: 'usenet' },
+      { title: 'Unrelated.Show.S02E09', categories: [{ id: 5000, name: 'TV' }], protocol: 'usenet' },
     ]));
     return res.end('[]');
   }
@@ -57,11 +61,17 @@ server.listen(0, '127.0.0.1', async () => {
     const prowlarrRows = await prowlarr.recent({ url: base, apiKey: 'test',
       intelligenceFallbackQueries: 'UFC', intelligenceFallbackQueriesPerRun: 1 }, log);
     assert.deepStrictEqual(prowlarrRows.map((row) => row.title).sort(),
-      ['UFC.300.1080p', 'UFC.301.1080p']);
+      ['UFC.300.1080p', 'UFC.301.1080p', 'UFC.302.Prelims.1080p']);
     assert.strictEqual(prowlarrRows.find((row) => row.title.includes('301')).protocol, 'usenet');
     assert.strictEqual(prowlarrRows.diagnostics.length, 4);
     assert.strictEqual(prowlarrRows.diagnostics.find((row) => row.name === 'Disabled').state, 'disabled');
-    assert.strictEqual(prowlarrRows.diagnostics.find((row) => row.name === 'No Sports').state, 'unsupported');
+    const noMapping = prowlarrRows.diagnostics.find((row) => row.name === 'No Sports Mapping');
+    assert.strictEqual(noMapping.state, 'working');
+    assert.strictEqual(noMapping.titleVerified, 1);
+    assert.strictEqual(noMapping.feedRaw, 0);
+    assert.strictEqual(noMapping.searchRaw, 2);
+    assert.ok(prowlarrRows.find((row) => row.title.includes('302'))
+      .categories.includes('title-verified-sport'));
     assert.strictEqual(prowlarrRows.diagnostics.find((row) => row.name === 'Usenet Search').mode, 'rotating search');
     const torznabRows = await torznab.recent({ url: base, apiPath: '/torznab' }, log);
     assert.deepStrictEqual(torznabRows.map((row) => row.title), ['UFC.300.1080p']);
@@ -69,7 +79,14 @@ server.listen(0, '127.0.0.1', async () => {
     assert.ok(requests.some((url) => /cat=5060/.test(url)), requests.join('\n'));
     assert.ok(requests.some((url) => /indexerIds=1/.test(url)), requests.join('\n'));
     assert.ok(requests.some((url) => /indexerIds=2/.test(url) && /query=UFC/.test(url)), requests.join('\n'));
-    assert.ok(!requests.some((url) => /indexerIds=(?:3|4)/.test(url)), requests.join('\n'));
+    assert.ok(requests.some((url) => /indexerIds=4/.test(url) && /query=UFC/.test(url)
+      && !/categories=/.test(url)), requests.join('\n'));
+    assert.ok(!requests.some((url) => /indexerIds=3/.test(url)), requests.join('\n'));
+    assert.ok(prowlarr.matchesFallbackTitle('UFC.300.Prelims.1080p', 'UFC'));
+    assert.ok(!prowlarr.matchesFallbackTitle('The Ultimate Fighter S03', 'UFC'));
+    assert.ok(prowlarr.matchesFallbackTitle('Formula1.2026.Dutch.GP.F1TV.1080p', 'Formula 1'));
+    assert.ok(prowlarr.matchesFallbackTitle('UCL.Arsenal.vs.Atletico.1080p', 'Champions League'));
+    assert.ok(prowlarr.matchesFallbackTitle('ONE.FF.168.1080p', 'ONE Friday Fights'));
     console.log('Release Intelligence source filtering tests passed.');
   } finally {
     server.close();

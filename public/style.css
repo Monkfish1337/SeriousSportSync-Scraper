@@ -72,6 +72,40 @@ h1 { font-size: 22px; }
 h2 { font-size: 17px; margin-top: 24px; }
 h3 { font-size: 15px; margin-top: 18px; }
 
+/* Page composition */
+.page-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 24px; margin-bottom: 20px;
+}
+.page-head p { color: var(--muted); max-width: 850px; margin: 0; }
+.page-head form { flex: 0 0 auto; }
+.stats {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px; margin-bottom: 18px;
+}
+.stats > div {
+  display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.stats strong { font-size: 18px; overflow-wrap: anywhere; }
+.stats span { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.panel {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 18px; margin-bottom: 18px;
+}
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.panel-head h2 { margin: 0 0 8px; }
+.filters {
+  display: grid; grid-template-columns: minmax(260px, 2fr) minmax(150px, 1fr) auto auto;
+  gap: 12px; align-items: end;
+}
+.filters label { display: flex; flex-direction: column; gap: 5px; color: var(--muted); font-size: 12px; }
+.filters input, .filters select { min-height: 38px; }
+.filters .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; white-space: nowrap; }
+.table-wrap { width: 100%; overflow-x: auto; }
+.empty { color: var(--muted); text-align: center !important; padding: 24px !important; }
+
 /* Cards */
 .card {
   background: var(--bg-card); border: 1px solid var(--border);
@@ -175,6 +209,11 @@ hr.sep { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
 @media (max-width: 760px) {
   .content { padding: 14px 12px 40px; }
   .card { padding: 12px; overflow-x: auto; }   /* non-responsive tables scroll instead of overflowing */
+  .page-head { flex-direction: column; gap: 12px; }
+  .page-head form, .page-head button { width: 100%; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .panel { padding: 12px; }
+  .filters { grid-template-columns: 1fr; }
 
   /* --- Topbar: collapse nav behind toggle --- */
   .topbar { flex-wrap: wrap; height: auto; min-height: 52px; padding: 8px 12px; gap: 8px; }
