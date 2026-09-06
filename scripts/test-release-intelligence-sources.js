@@ -87,6 +87,8 @@ server.listen(0, '127.0.0.1', async () => {
     assert.ok(prowlarr.matchesFallbackTitle('Formula1.2026.Dutch.GP.F1TV.1080p', 'Formula 1'));
     assert.ok(prowlarr.matchesFallbackTitle('UCL.Arsenal.vs.Atletico.1080p', 'Champions League'));
     assert.ok(prowlarr.matchesFallbackTitle('ONE.FF.168.1080p', 'ONE Friday Fights'));
+    assert.ok(prowlarr.looksLikeGameRelease('(PSP) WWE Smackdown Vs Raw 2011 (USA)'));
+    assert.ok(!prowlarr.looksLikeGameRelease('WWE.Raw.2026.09.01.1080p.WEB.h264'));
     console.log('Release Intelligence source filtering tests passed.');
   } finally {
     server.close();

@@ -125,6 +125,7 @@ Built-in types in v0.1:
 - **knaben** — Knaben multi-tracker aggregator (`POST /v1`).
 - **torznab** — generic Torznab XML feed; bring your own indexer URL + API key.
 - **bitmagnet** — dedicated Bitmagnet Torznab integration; enter the service URL and the companion uses `/torznab` without requiring an API key.
+- **bitsearch** — public bitsearch.eu JSON search API (`GET /api/v1/search`); no API key. Enter the site root only — `/api/v1/search` is appended automatically. Test uses a configurable probe query and reports a blocked or challenged request instead of quietly showing zero hits.
 
 Private tracker website logins are not performed by the companion. Configure
 credentials for trackers such as RuTracker in Prowlarr or Jackett, then add the
@@ -197,6 +198,9 @@ collection timeout defaults to 30 seconds, so slow collection does not require
 increasing playback latency. Prowlarr and direct Torznab sources are supported
 initially; unsupported sources are skipped without being probed. Collection runs
 hourly by default and can also be started manually.
+
+Category-free fallback results that are clearly console/ROM releases are rejected,
+and invalid upstream placeholder dates are stored as unknown rather than year 0001.
 
 The database stores only release title, publication/observation dates, size,
 category, protocol, and source/indexer labels. It never stores credentials,

@@ -29,12 +29,14 @@ try {
   }], source);
   intelligence.ingest([{
     title: 'UFC.302.Prelims.1080p', size: 1000, protocol: 'torrent',
-    indexer: 'Example Indexer', categories: ['5000', 'title-verified-sport'],
+    indexer: 'Example Indexer', publishedAt: '0001-01-01T00:01:00.000Z',
+    categories: ['5000', 'title-verified-sport'],
   }], source);
   const pruned = intelligence.pruneSourceCategories(Object.assign({}, source,
     { config: { intelligenceCategories: '5060' } }));
   assert.strictEqual(pruned.removedItems, 1);
   assert.strictEqual(intelligence.search({ query: 'UFC 302' }).count, 1);
+  assert.strictEqual(intelligence.search({ query: 'UFC 302' }).results[0].publishedAt, null);
   const result = intelligence.search({ queries: ['Champions League Arsenal Atletico'], limit: 20 });
   assert.strictEqual(result.count, 1);
   assert.strictEqual(result.results[0].origins.length, 2);
