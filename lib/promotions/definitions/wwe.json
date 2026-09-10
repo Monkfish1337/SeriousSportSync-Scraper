@@ -1,0 +1,14 @@
+{
+  "id": "wwe",
+  "label": "WWE",
+  "sport": "professional wrestling",
+  "tokens": ["WWE"],
+  "tokenAmbiguity": "low",
+  "contextTokens": ["Raw", "SmackDown", "NXT", "WrestleMania", "SummerSlam", "Royal Rumble", "Survivor Series", "Money in the Bank", "PLE", "Backlash"],
+  "negativeTokens": ["WWE 2K", "WWE Champions"],
+  "sizeFloorBytes": 300000000,
+  "queryTemplates": [
+    "WWE {name}",
+    "WWE {date}"
+  ]
+}
