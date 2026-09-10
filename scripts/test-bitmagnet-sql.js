@@ -135,12 +135,6 @@ assert.equal(source._test.rowToCandidate({ info_hash: '', name: 'x' }, {}), null
   // A failing query degrades to an empty result rather than killing the scrape.
   const broken = { async query() { throw new Error('connection terminated'); } };
   assert.deepEqual(await source.multiSearch(['EPL'], { _client: broken }, log), []);
-  // A source misconfigured with no client and no pg installed must surface a
-  // usable message rather than a module-not-found stack.
-  const noDriver = await source.test({ host: 'nowhere.invalid' }, log);
-  assert.equal(noDriver.ok, false);
-  assert.ok(/pg" package is not installed|ECONNREFUSED|connection refused|timeout/i.test(noDriver.message),
-    noDriver.message);
 
   // test() reports schema and scale, and explains common failures in English.
   const probe = await source.test({ _client: fakeClient([
@@ -156,10 +150,21 @@ assert.equal(source._test.rowToCandidate({ info_hash: '', name: 'x' }, {}), null
   assert.equal(wrongDb.ok, false);
   assert.ok(/not a Bitmagnet database/.test(wrongDb.message), wrongDb.message);
 
-  const refused = await source.test({
-    _client: { async query() { throw new Error('connect ECONNREFUSED 10.0.0.5:5432'); } },
-  }, log);
-  assert.ok(/connection refused/.test(refused.message), refused.message);
+  // Connection failures are translated into something an operator can act on.
+  // These assert the message mapping only — no test here touches the network.
+  const failures = [
+    ['connect ECONNREFUSED 10.0.0.5:5432', /connection refused/],
+    ['getaddrinfo ENOTFOUND postgres', /host not found.*same Docker network/s],
+    ['connect ETIMEDOUT 10.0.0.5:5432', /connection timed out/],
+    ['password authentication failed for user "ro"', /authentication failed/],
+  ];
+  for (const [raw, expected] of failures) {
+    const probe = await source.test({
+      _client: { async query() { throw new Error(raw); } },
+    }, log);
+    assert.equal(probe.ok, false, raw);
+    assert.ok(expected.test(probe.message), raw + ' -> ' + probe.message);
+  }
 
   // Recent feed for Release Intelligence.
   const feed = await source.recent({ _client: fakeClient([
