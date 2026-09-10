@@ -138,7 +138,13 @@ assert.equal(source._test.rowToCandidate({ info_hash: '', name: 'x' }, {}), null
   assert.equal(candidates[0].infoHash, HASH_A);
   // Blank and duplicate aliases must not become extra tsquery branches.
   assert.equal((capture.text.match(/websearch_to_tsquery/g) || []).length, 1);
-  assert.ok(/statement_timeout/.test(capture.text), 'query should be time-boxed');
+  // The query text must be a SINGLE statement. Prefixing "SET statement_timeout"
+  // makes node-postgres return an ARRAY of results, so `result.rows` comes back
+  // undefined and every row is silently dropped — a real bug that looked like an
+  // empty database. The timeout is a connection parameter instead.
+  assert.ok(!/statement_timeout|^\s*SET\s/im.test(capture.text),
+    'query text must contain exactly one statement');
+  assert.equal(capture.text.trim().split(';').filter((s) => s.trim()).length, 1);
 
   // An empty alias list is a no-op, not a query.
   const noQuery = {};
@@ -152,23 +158,51 @@ assert.equal(source._test.rowToCandidate({ info_hash: '', name: 'x' }, {}), null
   const capped = await source.multiSearch(['EPL'], { _client: fakeClient(many), limit: 5 }, log);
   assert.equal(capped._truncated, true, 'a full result set must report truncation');
 
+  // If a driver ever does hand back an array of results, take the last one's
+  // rows rather than reading .rows off the array and getting undefined.
+  const arrayShaped = {
+    async query() {
+      return [{ command: 'SET', rows: [] }, { command: 'SELECT', rows: [
+        { info_hash: HASH_B, name: 'EPL 2025-26 MD24', size: 2e9, seeders: 3 },
+      ] }];
+    },
+  };
+  const fromArray = await source.multiSearch(['EPL'], { _client: arrayShaped }, log);
+  assert.equal(fromArray.length, 1, 'array-shaped results must not be discarded');
+  assert.equal(fromArray[0].infoHash, HASH_B);
+
   // A failing query degrades to an empty result rather than killing the scrape.
   const broken = { async query() { throw new Error('connection terminated'); } };
   assert.deepEqual(await source.multiSearch(['EPL'], { _client: broken }, log), []);
 
   // test() reports schema and scale, and explains common failures in English.
+  const probeCapture = {};
   const probe = await source.test({ _client: fakeClient([
-    { torrents: 41234567, contents: 39000000, version: '16.2' },
-  ]) }, log);
+    { has_torrents: true, has_contents: true,
+      torrents: 41234567, contents: 39000000, version: '16.2' },
+  ], probeCapture) }, log);
   assert.equal(probe.ok, true);
   assert.ok(/Postgres 16\.2/.test(probe.message), probe.message);
   assert.ok(/41,234,567 torrents/.test(probe.message), probe.message);
+  // count(*) on a multi-million-row table is a full scan (~9s measured on a
+  // real index). The probe must use the planner's estimate instead.
+  assert.ok(!/count\(\*\)/i.test(probeCapture.text), 'probe must not use count(*)');
+  assert.ok(/reltuples/.test(probeCapture.text), 'probe should use reltuples');
 
-  const wrongDb = await source.test({
-    _client: { async query() { throw new Error('relation "torrent_contents" does not exist'); } },
-  }, log);
+  // A missing table is reported as "not a Bitmagnet database" rather than as
+  // an empty one — an estimate alone cannot tell those apart.
+  const wrongDb = await source.test({ _client: fakeClient([
+    { has_torrents: false, has_contents: false, torrents: 0, contents: 0, version: '16.2' },
+  ]) }, log);
   assert.equal(wrongDb.ok, false);
   assert.ok(/not a Bitmagnet database/.test(wrongDb.message), wrongDb.message);
+
+  // A genuinely empty but valid Bitmagnet database still reports ok.
+  const emptyDb = await source.test({ _client: fakeClient([
+    { has_torrents: true, has_contents: true, torrents: 0, contents: 0, version: '16.2' },
+  ]) }, log);
+  assert.equal(emptyDb.ok, true);
+  assert.ok(/0 torrents/.test(emptyDb.message), emptyDb.message);
 
   // Connection failures are translated into something an operator can act on.
   // These assert the message mapping only — no test here touches the network.
