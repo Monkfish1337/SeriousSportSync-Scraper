@@ -1,0 +1,16 @@
+{
+  "id": "ucl",
+  "label": "UEFA Champions League",
+  "sport": "football",
+  "tokens": ["UCL", "UEFA Champions League", "Champions League"],
+  "tokenAmbiguity": "high",
+  "seasonRound": true,
+  "contextTokens": ["Group Stage", "Matchday", "Round of 16", "Quarter Final", "Semi Final", "Final", "League Phase", "Knockout"],
+  "negativeTokens": [],
+  "sizeFloorBytes": 300000000,
+  "queryTemplates": [
+    "UCL {season} {round}",
+    "Champions League {home} vs {away}",
+    "Champions League {date}"
+  ]
+}

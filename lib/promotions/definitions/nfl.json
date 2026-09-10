@@ -1,0 +1,16 @@
+{
+  "id": "nfl",
+  "label": "National Football League",
+  "sport": "american football",
+  "tokens": ["NFL"],
+  "tokenAmbiguity": "medium",
+  "seasonRound": true,
+  "contextTokens": ["Week", "Wildcard", "Wild Card", "Divisional", "Conference Championship", "Super Bowl", "Playoffs", "RedZone", "Preseason"],
+  "negativeTokens": ["Madden", "NFL Blitz"],
+  "sizeFloorBytes": 300000000,
+  "queryTemplates": [
+    "NFL {season} Week {round}",
+    "NFL {home} vs {away}",
+    "NFL {date}"
+  ]
+}

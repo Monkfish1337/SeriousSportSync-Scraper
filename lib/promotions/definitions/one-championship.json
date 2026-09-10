@@ -1,0 +1,15 @@
+{
+  "id": "one-championship",
+  "label": "ONE Championship",
+  "sport": "mma",
+  "tokens": ["ONE Championship", "ONE FC", "ONE Fight Night"],
+  "tokenAmbiguity": "high",
+  "eventNumbered": true,
+  "contextTokens": ["Fight Night", "Friday Fights", "Prelims", "Main Card", "Circle"],
+  "sizeFloorBytes": 300000000,
+  "queryTemplates": [
+    "ONE Championship {eventNo}",
+    "ONE Fight Night {eventNo}",
+    "ONE Championship {date}"
+  ]
+}

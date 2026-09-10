@@ -1,0 +1,17 @@
+{
+  "id": "ufc",
+  "label": "Ultimate Fighting Championship",
+  "sport": "mma",
+  "tokens": ["UFC"],
+  "tokenAmbiguity": "low",
+  "eventNumbered": true,
+  "contextTokens": ["Fight Night", "PPV", "Prelims", "Early Prelims", "Main Card", "Embedded", "Countdown", "on ESPN", "Fight Pass"],
+  "negativeTokens": ["UFC Undisputed", "UFC 3 PS4", "EA Sports UFC"],
+  "sizeFloorBytes": 300000000,
+  "queryTemplates": [
+    "UFC {eventNo}",
+    "UFC {eventNo} PPV",
+    "UFC Fight Night {date}",
+    "UFC {home} vs {away}"
+  ]
+}

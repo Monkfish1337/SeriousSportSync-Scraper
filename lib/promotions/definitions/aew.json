@@ -1,0 +1,13 @@
+{
+  "id": "aew",
+  "label": "All Elite Wrestling",
+  "sport": "professional wrestling",
+  "tokens": ["AEW", "All Elite Wrestling"],
+  "tokenAmbiguity": "low",
+  "contextTokens": ["Dynamite", "Rampage", "Collision", "Double or Nothing", "All Out", "Full Gear", "Revolution", "All In"],
+  "sizeFloorBytes": 300000000,
+  "queryTemplates": [
+    "AEW {name}",
+    "AEW {date}"
+  ]
+}
