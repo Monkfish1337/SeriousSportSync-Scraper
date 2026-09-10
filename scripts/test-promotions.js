@@ -153,6 +153,19 @@ assert.equal(ufcRanked[0].infoHash, 'x');
 // ---------------------------------------------------------------------------
 const classified = promotions.classify('UFC.291.PPV.1080p.WEB-DL');
 assert.equal(classified.promotion, 'ufc');
+
+// ---------------------------------------------------------------------------
+// Definition ids must match the ids the metadata addon actually sends.
+//
+// lib/sources/companion-scraper.js posts `promotion: promotion.id` verbatim, so
+// a definition filed under a different slug silently never ranks anything. This
+// list is the addon's own ids for the promotions we currently define.
+// ---------------------------------------------------------------------------
+const ADDON_IDS = ['epl', 'ucl', 'ufc', 'one', 'f1', 'nfl', 'nba', 'wwe', 'aew'];
+for (const id of ADDON_IDS) {
+  assert.ok(promotions.get(id),
+    'no definition for addon promotion id "' + id + '" — ranking would no-op');
+}
 assert.equal(promotions.classify('Totally unrelated linux iso 2024'), null);
 
 // ---------------------------------------------------------------------------
