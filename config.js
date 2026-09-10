@@ -40,6 +40,19 @@ const config = {
   intelligenceRetentionDays: num(process.env.INTELLIGENCE_RETENTION_DAYS, 14),
   intelligenceMaxItems: num(process.env.INTELLIGENCE_MAX_ITEMS, 20000),
 
+  // Promotion-aware ranking of merged candidates.
+  //
+  //   'off'    — return candidates in merge order (pre-0.5 behaviour)
+  //   'sort'   — score against the requested promotion/event and order by it,
+  //              dropping nothing (default)
+  //   'filter' — additionally drop candidates the promotion rejects outright
+  //
+  // Default is 'sort' because it is non-destructive: the addon still receives
+  // every candidate and remains free to apply its own relevance pass. 'filter'
+  // is opt-in because dropping a candidate here is invisible downstream.
+  rankMode: ['off', 'sort', 'filter'].includes(process.env.RANK_MODE)
+    ? process.env.RANK_MODE : 'sort',
+
   // In-memory log ring buffer size.
   logBufferMax: num(process.env.LOG_BUFFER_MAX, 4000),
 

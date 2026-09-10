@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "check": "node scripts/check-syntax.js",
-    "test": "node scripts/check-syntax.js && node scripts/test-prowlarr-hydration.js && node scripts/test-search-budget.js && node scripts/test-release-intelligence.js && node scripts/test-release-intelligence-sources.js && node scripts/test-public-boundary.js && node scripts/test-torznab-endpoints.js && node scripts/test-bitsearch-source.js && node scripts/test-promotions.js && node scripts/test-bitmagnet-sql.js"
+    "test": "node scripts/check-syntax.js && node scripts/test-prowlarr-hydration.js && node scripts/test-search-budget.js && node scripts/test-release-intelligence.js && node scripts/test-release-intelligence-sources.js && node scripts/test-public-boundary.js && node scripts/test-torznab-endpoints.js && node scripts/test-bitsearch-source.js && node scripts/test-promotions.js && node scripts/test-bitmagnet-sql.js && node scripts/test-scrape-ranking.js"
   },
   "license": "MIT",
   "private": true,

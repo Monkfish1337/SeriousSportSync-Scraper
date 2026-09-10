@@ -73,6 +73,7 @@ The metadata addon's `/admin → Sources` page is where you point at this servic
 | `RESEARCH_BUDGET_MS` | `60000` | ceiling for explicit Promotion Wizard research requests |
 | `SOURCE_CACHE_TTL_MS` | `900000` | retain completed source searches for Refresh Links (15 minutes) |
 | `SOURCE_CACHE_MAX` | `500` | maximum exact source/query results retained in memory |
+| `RANK_MODE` | `sort` | promotion-aware ranking of merged candidates: `off`, `sort`, or `filter` |
 | `INTELLIGENCE_ENABLED` | `true` | collect recent title-only metadata from supported Sport Sources |
 | `INTELLIGENCE_INTERVAL_MS` | `3600000` | collection interval (one hour) |
 | `INTELLIGENCE_STARTUP_DELAY_MS` | `60000` | delay before the first collection after startup |
@@ -237,6 +238,47 @@ quietly rather than loudly:
 Also note `torrent_contents.published_at` defaults to `1999-01-01` rather than
 `NULL` (migration `00017`), so that sentinel is mapped back to "unknown"
 instead of being surfaced as a real publication date.
+
+---
+
+## Ranking
+
+Sources are a **recall** stage. They over-fetch on purpose: a local database
+can afford it, and a noisy alias buries real hits when a result set is
+truncated. Precision happens after the merge, using the promotion the caller
+named and the definitions in `lib/promotions/`.
+
+Why it matters, from a real run against a 10M-row Bitmagnet on the bare alias
+`EPL` — no corroborating context in the query at all:
+
+| Source | Results | Time | Led with |
+| --- | --- | --- | --- |
+| Bitmagnet (Torznab) | 100 (its limit) | 339ms | a 2013 season pack, an `.epub`, a Korean audiobook |
+| Bitmagnet (Postgres) | 300 (its limit) | 616ms | four 2026 fixtures, 21–28 seeders |
+| Prowlarr | 175 | 20,289ms | Japanese concert listings matching `eplus` |
+
+Both Bitmagnet sources truncated. The difference is that one was ordered, so
+truncation cut the tail instead of the head. Ranking applies the same idea to
+the merged set across every source.
+
+`RANK_MODE` (or a per-request `rank` field) chooses the behaviour:
+
+| Mode | Effect |
+| --- | --- |
+| `off` | return candidates in merge order — pre-0.5 behaviour |
+| `sort` | **default.** Score against the promotion and event, lead with what it recognises, keep everything else at the tail |
+| `filter` | additionally drop candidates the promotion rejects outright |
+
+`sort` is the default because it is non-destructive: the addon still receives
+every candidate and remains free to apply its own relevance pass. `filter` is
+opt-in, because a candidate dropped here is invisible downstream — a wrong or
+missing promotion definition would look exactly like "the release isn't
+indexed".
+
+Ranking is never load-bearing. An unknown promotion id, a missing definition,
+or an exception all fall back to the unranked merge and say so in the log,
+rather than returning an empty list. Ranked candidates carry a numeric `score`;
+the reasons behind it stay scraper-side, like `indexer`.
 
 ---
 
