@@ -125,6 +125,8 @@ Built-in types in v0.1:
 - **knaben** — Knaben multi-tracker aggregator (`POST /v1`).
 - **torznab** — generic Torznab XML feed; bring your own indexer URL + API key.
 - **bitmagnet** — dedicated Bitmagnet Torznab integration; enter the service URL and the companion uses `/torznab` without requiring an API key.
+- **bitmagnet-sql** — Bitmagnet's Postgres database, queried directly. Use this
+  when the database is reachable from this service; see below.
 - **bitsearch** — public bitsearch.eu JSON search API (`GET /api/v1/search`); no API key. Enter the site root only — `/api/v1/search` is appended automatically. Test uses a configurable probe query and reports a blocked or challenged request instead of quietly showing zero hits.
 
 Private tracker website logins are not performed by the companion. Configure
@@ -183,6 +185,58 @@ node scripts/promotion-corpus.js ./epl_results.csv epl    # one, with samples
 ```
 
 The CSV needs a `name` column, so a plain Bitmagnet report works as-is.
+
+---
+
+## Bitmagnet over Postgres
+
+Torznab is a wire format for *remote* trackers. When Bitmagnet is your own
+database on your own box, it throws away everything that makes that useful:
+one `q=` string per request (so N aliases are N round trips), no offset (so a
+noisy alias truncates silently), no ordering (so truncation cuts the head, not
+the tail), and no access to size or seeders as predicates.
+
+The `bitmagnet-sql` source type talks to Postgres instead. Every alias goes
+into **one** statement, results are over-fetched and ordered by seeders, and
+size/age/private filters run in the database.
+
+```
+host      postgres        # Bitmagnet's database container
+port      5432
+database  bitmagnet
+user      bitmagnet_ro    # a read-only role is recommended
+limit     300             # over-fetch; local queries are cheap
+```
+
+The connection is opened with `default_transaction_read_only=on` and the source
+never writes. `pg` is an **optional** dependency — the service runs fine without
+it and only this source type needs it:
+
+```bash
+pnpm add pg
+```
+
+`Test` on the source reports the server version and how many torrents are
+indexed, so a wrong database or a bad password says so in English.
+
+### Schema notes
+
+Two things about Bitmagnet's schema are easy to get wrong, and both fail
+quietly rather than loudly:
+
+- **`torrents.tsv` and `torrents.search_string` do not exist.** Migration
+  `00006_tsv.sql` dropped them. The only GIN-indexed full-text column is
+  `torrent_contents.tsv`, so that is what this source searches. Matching
+  `torrents.name` with `ILIKE` instead would sequential-scan the whole table —
+  on a multi-million-row index on modest hardware, that is the difference
+  between a few milliseconds and a query you abandon.
+- **`info_hash` is `bytea`, not text.** It needs `encode(info_hash, 'hex')` on
+  the way out. This is why a raw report shows `\x2210bd10...`, and why
+  forgetting it produces hashes that look plausible and match nothing.
+
+Also note `torrent_contents.published_at` defaults to `1999-01-01` rather than
+`NULL` (migration `00017`), so that sentinel is mapped back to "unknown"
+instead of being surfaced as a real publication date.
 
 ---
 
