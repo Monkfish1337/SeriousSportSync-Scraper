@@ -37,6 +37,20 @@ assert.ok(!Object.keys(require.cache).some((k) => /[\\/]node_modules[\\/]pg[\\/]
   'pg must not be required at registry load time');
 
 // ---------------------------------------------------------------------------
+// Schema declaration must match what views/sources.js can actually render.
+// ---------------------------------------------------------------------------
+const fieldTypes = new Set(['text', 'url', 'secret', 'csv', 'number', 'bool']);
+for (const field of source.schema) {
+  assert.ok(fieldTypes.has(field.type),
+    'unsupported field type "' + field.type + '" on ' + field.name
+    + ' — renderField falls back to a text input, so a boolean would save the '
+    + 'STRING "false", which is truthy');
+  // renderForm() already emits a built-in "Display name" input; declaring one
+  // in the schema renders it twice.
+  assert.notEqual(field.name, 'label', 'schema must not redeclare the name field');
+}
+
+// ---------------------------------------------------------------------------
 // SQL shape.
 // ---------------------------------------------------------------------------
 const built = source._test.buildSearch(['EPL 2025-26 MD24', 'EPL MUN vs MCI'], {
@@ -67,6 +81,12 @@ assert.ok(!/\$\{|'\s*\+\s*/.test(built.text), 'no string interpolation in SQL');
 
 // Ordering exists, so truncation removes the tail rather than the head.
 assert.ok(/ORDER BY matches\.seeders DESC/.test(built.text));
+
+// A checkbox left unticked arrives as boolean false, and must not filter.
+assert.ok(!source._test.buildSearch(['x'], { excludePrivate: false }).text
+  .includes('t.private = false'));
+assert.ok(source._test.buildSearch(['x'], { excludePrivate: true }).text
+  .includes('t.private = false'));
 
 // No filters configured -> no filter clauses, still valid.
 const bare = source._test.buildSearch(['UFC 291'], {});
